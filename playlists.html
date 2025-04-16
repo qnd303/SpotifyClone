@@ -5,7 +5,6 @@
   <title>SpotifyClone</title>
   <link rel="stylesheet" href="styles.css">
   <style>
-    /* Modal Styles */
     .modal {
       display: none;
       position: fixed;
@@ -35,6 +34,15 @@
       padding: 8px;
       margin-bottom: 10px;
     }
+
+    .playlist-img {
+  width: 100%;
+  max-width: 200px;
+  height: 120px;              /* Fixed height */
+  object-fit: cover;          /* Crop the image, don't stretch it */
+  border-radius: 8px;
+  margin-bottom: 10px;
+}
   </style>
 </head>
 <body>
@@ -56,6 +64,7 @@
     <input type="text" id="playlist-name" placeholder="Playlist name"><br><br>
     <textarea id="playlist-desc" placeholder="Playlist description"></textarea><br><br>
     <input type="text" id="playlist-songs" placeholder="Comma-separated song titles"><br><br>
+    <input type="file" id="playlist-image" accept="image/*"><br><br>
     <button onclick="savePlaylist()">Create Playlist</button>
 
     <h2>Existing Playlists</h2>
@@ -69,6 +78,7 @@
       <input type="text" id="edit-name" placeholder="Playlist name"><br>
       <textarea id="edit-desc" placeholder="Description"></textarea><br>
       <input type="text" id="edit-songs" placeholder="Comma-separated songs"><br>
+      <input type="file" id="edit-image" accept="image/*"><br>
       <button onclick="saveEdit()">Save</button>
       <button onclick="closeModal()">Cancel</button>
     </div>
@@ -79,19 +89,37 @@
       const name = document.getElementById("playlist-name").value.trim();
       const desc = document.getElementById("playlist-desc").value.trim();
       const songs = document.getElementById("playlist-songs").value.trim().split(',').map(s => s.trim()).filter(Boolean);
+      const imageInput = document.getElementById("playlist-image");
 
       if (!name) return;
 
-      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+      const reader = new FileReader();
 
-      playlists.push({ name, desc, songs });
-      localStorage.setItem("playlists", JSON.stringify(playlists));
+      reader.onload = function (event) {
+        const imageData = event.target.result;
+        const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+        playlists.push({ name, desc, songs, image: imageData });
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        clearForm();
+        displayPlaylists();
+      };
 
+      if (imageInput.files.length > 0) {
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+        playlists.push({ name, desc, songs, image: null });
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        clearForm();
+        displayPlaylists();
+      }
+    }
+
+    function clearForm() {
       document.getElementById("playlist-name").value = "";
       document.getElementById("playlist-desc").value = "";
       document.getElementById("playlist-songs").value = "";
-
-      displayPlaylists();
+      document.getElementById("playlist-image").value = "";
     }
 
     function deletePlaylist(index) {
@@ -111,12 +139,12 @@
       document.getElementById("edit-name").value = playlist.name;
       document.getElementById("edit-desc").value = playlist.desc;
       document.getElementById("edit-songs").value = playlist.songs.join(', ');
-
       document.getElementById("edit-modal").style.display = "flex";
     }
 
     function closeModal() {
       document.getElementById("edit-modal").style.display = "none";
+      document.getElementById("edit-image").value = "";
       editIndex = null;
     }
 
@@ -124,21 +152,39 @@
       const name = document.getElementById("edit-name").value.trim();
       const desc = document.getElementById("edit-desc").value.trim();
       const songs = document.getElementById("edit-songs").value.trim().split(',').map(s => s.trim()).filter(Boolean);
+      const imageInput = document.getElementById("edit-image");
 
       if (!name || editIndex === null) return;
 
       const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
-      playlists[editIndex] = { name, desc, songs };
-      localStorage.setItem("playlists", JSON.stringify(playlists));
+      const original = playlists[editIndex];
 
-      closeModal();
-      displayPlaylists();
+      const updatePlaylist = (imageData) => {
+        playlists[editIndex] = {
+          name,
+          desc,
+          songs,
+          image: imageData ?? original.image
+        };
+        localStorage.setItem("playlists", JSON.stringify(playlists));
+        closeModal();
+        displayPlaylists();
+      };
+
+      if (imageInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.onload = function (event) {
+          updatePlaylist(event.target.result);
+        };
+        reader.readAsDataURL(imageInput.files[0]);
+      } else {
+        updatePlaylist(original.image);
+      }
     }
 
     function displayPlaylists() {
       const container = document.getElementById("existing-playlists");
       const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
-
       container.innerHTML = "";
 
       if (playlists.length === 0) {
@@ -148,6 +194,7 @@
           const div = document.createElement("div");
           div.className = "playlist-box";
           div.innerHTML = `
+          <img src="${p.image && p.image !== '' ? p.image : 'stewart.jpg'}" class="playlist-img"><br>
             <strong>${p.name}</strong><br>
             <em>${p.desc || 'No description'}</em><br>
             <span>Songs: ${Array.isArray(p.songs) ? p.songs.join(', ') : 'None'}</span><br><br>

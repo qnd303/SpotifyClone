@@ -4,99 +4,126 @@
   <meta charset="UTF-8">
   <title>SpotifyClone</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    .song-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+      padding: 20px;
+    }
+
+    .song-box {
+      background-color: #2a2a3d;
+      color: white;
+      padding: 15px;
+      border-radius: 10px;
+      height: 300px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .image-wrapper {
+      width: 100%;
+      height: 150px;
+      overflow: hidden;
+      border-radius: 8px;
+    }
+
+    .song-image {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .text-and-button {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 10px;
+    }
+
+    .song-title {
+      font-weight: bold;
+      margin: 0;
+    }
+
+    .song-author {
+      margin: 0;
+      font-size: 0.85em;
+      color: #ccc;
+    }
+
+    .play-button {
+      background-color: #444;
+      border: none;
+      border-radius: 50%;
+      color: white;
+      font-size: 16px;
+      padding: 10px;
+      cursor: pointer;
+    }
+  </style>
 </head>
 <body>
   <div class="navbar">
     <div class="title">
-        <a href="frontpage.html">
-            <img src="not-spotify-high-resolution-logo.png" alt="Logo" class="logo">
-          </a>      </div>    
-      <div class="nav-buttons">
-        <a href="search.html">Search</a>
-        <a href="playlists.html">Playlists</a>
+      <a href="frontpage.html">
+        <img src="not-spotify-high-resolution-logo.png" alt="Logo" class="logo">
+      </a>
+    </div>    
+    <div class="nav-buttons">
+      <a href="search.html">Search</a>
+      <a href="playlists.html">Playlists</a>
       <a href="trending.html">Trending</a>
     </div>
   </div>
 
-  <div class="song-grid">
-    <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-      <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-      <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-      <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-      <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-      <div class="song-box">
-        <div class="image-wrapper">
-          <img src="bbldrizzy.jpg" alt="Song Cover" class="song-image">
-        </div>
-        <div class="text-and-button">
-          <div class="text">
-            <p class="song-title">BBL DRIZZY</p>
-            <p class="song-author">Quandale Dingle</p>
-          </div>
-          <button class="play-button">▶</button>
-        </div>
-      </div>
-  </div>
+  <!-- 🎵 Playlist Grid -->
+  <div class="song-grid" id="playlist-display"></div>
 
+  <!-- 🎯 Playlist Display Script -->
+  <script>
+    const defaultName = "strwarert";
+    const defaultAuthor = "stwart";
+    const defaultImage = "stewart.jpg"; // Make sure this image exists
+
+    function displayPlaylistsOnFrontPage() {
+      const container = document.getElementById("playlist-display");
+      container.innerHTML = "";
+
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+
+      for (let i = 0; i < 6; i++) {
+        const p = playlists[i] || {
+          name: defaultName,
+          desc: defaultAuthor,
+          songs: [],
+          image: defaultImage
+        };
+
+        const songBox = document.createElement("div");
+        songBox.className = "song-box";
+
+        songBox.innerHTML = `
+          <div class="image-wrapper">
+            <img src="${p.image && p.image !== '' ? p.image : defaultImage}" alt="Song Cover" class="song-image">
+          </div>
+          <div class="text-and-button">
+            <div class="text">
+              <p class="song-title">${p.name || defaultName}</p>
+              <p class="song-author">${p.desc || defaultAuthor}</p>
+            </div>
+            <button class="play-button">▶</button>
+          </div>
+        `;
+
+        container.appendChild(songBox);
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", displayPlaylistsOnFrontPage);
+  </script>
 </body>
-</html>
-
-
-</body>
-
 </html>
