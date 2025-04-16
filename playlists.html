@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SpotifyClone</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="title">
+      <a href="frontpage.html">
+        <img src="not-spotify-high-resolution-logo.png" alt="Logo" class="logo">
+      </a>
+    </div>    
+    <div class="nav-buttons">
+      <a href="search.html">Search</a>
+      <a href="playlists.html">Playlists</a>
+      <a href="trending.html">Trending</a>
+    </div>
+  </div>
+
+  <main style="padding: 20px;">
+    <h2>Create a Playlist</h2>
+    <input type="text" id="playlist-name" placeholder="Playlist name"><br><br>
+    <textarea id="playlist-desc" placeholder="Playlist description"></textarea><br><br>
+    <input type="text" id="playlist-songs" placeholder="Comma-separated song titles"><br><br>
+    <button onclick="savePlaylist()">Create Playlist</button>
+
+    <h2>Existing Playlists</h2>
+    <div id="existing-playlists"></div>
+  </main>
+
+  <script>
+    function savePlaylist() {
+      const name = document.getElementById("playlist-name").value.trim();
+      const desc = document.getElementById("playlist-desc").value.trim();
+      const songs = document.getElementById("playlist-songs").value.trim().split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!name) return;
+
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+
+      playlists.push({ name, desc, songs });
+      localStorage.setItem("playlists", JSON.stringify(playlists));
+
+      document.getElementById("playlist-name").value = "";
+      document.getElementById("playlist-desc").value = "";
+      document.getElementById("playlist-songs").value = "";
+
+      displayPlaylists();
+    }
+
+    function deletePlaylist(index) {
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+      playlists.splice(index, 1);
+      localStorage.setItem("playlists", JSON.stringify(playlists));
+      displayPlaylists();
+    }
+
+    function editPlaylist(index) {
+  const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+  const playlist = playlists[index];
+
+  // Show current values in prompt
+  const newName = prompt("Edit playlist name:", playlist.name);
+  const newDesc = prompt("Edit description:", playlist.desc);
+  const newSongs = prompt("Edit songs (comma separated):", playlist.songs.join(', '));
+
+  // Only update if user clicked OK and name isn't empty
+  if (newName !== null && newName.trim() !== "") {
+    playlist.name = newName.trim();
+    playlist.desc = newDesc !== null ? newDesc.trim() : playlist.desc;
+    playlist.songs = newSongs !== null
+      ? newSongs.split(',').map(s => s.trim()).filter(Boolean)
+      : playlist.songs;
+
+    playlists[index] = playlist;
+    localStorage.setItem("playlists", JSON.stringify(playlists));
+    displayPlaylists();
+  }
+}
+
+
+    function displayPlaylists() {
+  const container = document.getElementById("existing-playlists");
+  const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+
+  container.innerHTML = "";
+
+  if (playlists.length === 0) {
+    container.innerHTML = "<p>No playlists yet. Create one above! 🎶</p>";
+  } else {
+    playlists.forEach((p, i) => {
+      const div = document.createElement("div");
+      div.className = "playlist-box";
+      div.innerHTML = `
+        <strong>${p.name}</strong><br>
+        <em>${p.desc || 'No description'}</em><br>
+        <span>Songs: ${Array.isArray(p.songs) ? p.songs.join(', ') : 'None'}</span><br><br>
+        <button onclick="editPlaylist(${i})">Edit</button>
+        <button onclick="deletePlaylist(${i})">Delete</button>
+      `;
+      container.appendChild(div);
+    });
+  }
+}
+
+
+    document.addEventListener("DOMContentLoaded", displayPlaylists);
+  </script>
+</body>
+</html>
