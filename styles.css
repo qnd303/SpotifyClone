@@ -34,4 +34,10 @@ body {
   .nav-buttons a:hover {
     background-color: #575787;
   }
+
+  .logo {
+    height: 30px;
+    margin-right: 10px;
+    vertical-align: middle;
+  }
   
