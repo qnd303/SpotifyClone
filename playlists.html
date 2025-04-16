@@ -4,6 +4,38 @@
   <meta charset="UTF-8">
   <title>SpotifyClone</title>
   <link rel="stylesheet" href="styles.css">
+  <style>
+    /* Modal Styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+
+    .modal-content {
+      background-color: #2a2a3d;
+      padding: 20px;
+      border-radius: 8px;
+      color: white;
+      min-width: 300px;
+    }
+
+    .modal-content input,
+    .modal-content textarea {
+      width: 100%;
+      background-color: #1e1e2f;
+      color: white;
+      border: 1px solid #444;
+      border-radius: 4px;
+      padding: 8px;
+      margin-bottom: 10px;
+    }
+  </style>
 </head>
 <body>
   <div class="navbar">
@@ -29,6 +61,18 @@
     <h2>Existing Playlists</h2>
     <div id="existing-playlists"></div>
   </main>
+
+  <!-- ✨ Modal for Editing -->
+  <div id="edit-modal" class="modal">
+    <div class="modal-content">
+      <h3>Edit Playlist</h3>
+      <input type="text" id="edit-name" placeholder="Playlist name"><br>
+      <textarea id="edit-desc" placeholder="Description"></textarea><br>
+      <input type="text" id="edit-songs" placeholder="Comma-separated songs"><br>
+      <button onclick="saveEdit()">Save</button>
+      <button onclick="closeModal()">Cancel</button>
+    </div>
+  </div>
 
   <script>
     function savePlaylist() {
@@ -57,54 +101,63 @@
       displayPlaylists();
     }
 
+    let editIndex = null;
+
     function editPlaylist(index) {
-  const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
-  const playlist = playlists[index];
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+      const playlist = playlists[index];
 
-  // Show current values in prompt
-  const newName = prompt("Edit playlist name:", playlist.name);
-  const newDesc = prompt("Edit description:", playlist.desc);
-  const newSongs = prompt("Edit songs (comma separated):", playlist.songs.join(', '));
+      editIndex = index;
+      document.getElementById("edit-name").value = playlist.name;
+      document.getElementById("edit-desc").value = playlist.desc;
+      document.getElementById("edit-songs").value = playlist.songs.join(', ');
 
-  // Only update if user clicked OK and name isn't empty
-  if (newName !== null && newName.trim() !== "") {
-    playlist.name = newName.trim();
-    playlist.desc = newDesc !== null ? newDesc.trim() : playlist.desc;
-    playlist.songs = newSongs !== null
-      ? newSongs.split(',').map(s => s.trim()).filter(Boolean)
-      : playlist.songs;
+      document.getElementById("edit-modal").style.display = "flex";
+    }
 
-    playlists[index] = playlist;
-    localStorage.setItem("playlists", JSON.stringify(playlists));
-    displayPlaylists();
-  }
-}
+    function closeModal() {
+      document.getElementById("edit-modal").style.display = "none";
+      editIndex = null;
+    }
 
+    function saveEdit() {
+      const name = document.getElementById("edit-name").value.trim();
+      const desc = document.getElementById("edit-desc").value.trim();
+      const songs = document.getElementById("edit-songs").value.trim().split(',').map(s => s.trim()).filter(Boolean);
+
+      if (!name || editIndex === null) return;
+
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+      playlists[editIndex] = { name, desc, songs };
+      localStorage.setItem("playlists", JSON.stringify(playlists));
+
+      closeModal();
+      displayPlaylists();
+    }
 
     function displayPlaylists() {
-  const container = document.getElementById("existing-playlists");
-  const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
+      const container = document.getElementById("existing-playlists");
+      const playlists = JSON.parse(localStorage.getItem("playlists")) || [];
 
-  container.innerHTML = "";
+      container.innerHTML = "";
 
-  if (playlists.length === 0) {
-    container.innerHTML = "<p>No playlists yet. Create one above! 🎶</p>";
-  } else {
-    playlists.forEach((p, i) => {
-      const div = document.createElement("div");
-      div.className = "playlist-box";
-      div.innerHTML = `
-        <strong>${p.name}</strong><br>
-        <em>${p.desc || 'No description'}</em><br>
-        <span>Songs: ${Array.isArray(p.songs) ? p.songs.join(', ') : 'None'}</span><br><br>
-        <button onclick="editPlaylist(${i})">Edit</button>
-        <button onclick="deletePlaylist(${i})">Delete</button>
-      `;
-      container.appendChild(div);
-    });
-  }
-}
-
+      if (playlists.length === 0) {
+        container.innerHTML = "<p>No playlists yet. Create one above! 🎶</p>";
+      } else {
+        playlists.forEach((p, i) => {
+          const div = document.createElement("div");
+          div.className = "playlist-box";
+          div.innerHTML = `
+            <strong>${p.name}</strong><br>
+            <em>${p.desc || 'No description'}</em><br>
+            <span>Songs: ${Array.isArray(p.songs) ? p.songs.join(', ') : 'None'}</span><br><br>
+            <button onclick="editPlaylist(${i})">Edit</button>
+            <button onclick="deletePlaylist(${i})">Delete</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+    }
 
     document.addEventListener("DOMContentLoaded", displayPlaylists);
   </script>
