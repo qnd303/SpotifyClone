@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SpotifyClone</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="navbar">
+    <div class="title">
+      <a href="frontpage.html">
+        <img src="not-spotify-high-resolution-logo.png" alt="Logo" class="logo">
+      </a>
+    </div>
+    <div class="nav-buttons">
+      <a href="search.html">Search</a>
+      <a href="playlists.html">Playlists</a>
+      <a href="trending.html">Trending</a>
+    </div>
+  </div>
+
+  <section id="new-releases" class="album-section">
+    <h2>TRENDING</h2>
+    <div id="album-grid" class="song-grid"></div>
+  </section>
+
+  <script>
+    const clientId = "ca62db222e4f417aaf50b4e1824adeef"; 
+    const clientSecret = "824802c132fe4dd4a5aa6c7be8f2b7f0"; 
+    const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
+  
+    async function getAccessToken() {
+      const response = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Authorization": `Basic ${encodedCredentials}`
+        },
+        body: "grant_type=client_credentials"
+      });
+      const data = await response.json();
+      return data.access_token;
+    }
+
+    async function fetchNewReleases() {
+      const token = await getAccessToken(); 
+      const response = await fetch('https://api.spotify.com/v1/browse/new-releases?limit=48', {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+  
+      const data = await response.json();
+      const albums = data.albums.items;
+      const albumGrid = document.getElementById("album-grid");
+  
+      albumGrid.innerHTML = ""; 
+  
+      albums.forEach(album => {
+        const card = document.createElement("div");
+        card.className = "song-box";
+  
+        const imgWrapper = document.createElement("div");
+        imgWrapper.className = "image-wrapper";
+        const img = document.createElement("img");
+        img.src = album.images[0]?.url || ""; 
+        img.alt = album.name;
+        img.className = "song-image";
+        imgWrapper.appendChild(img);
+  
+        const info = document.createElement("div");
+        info.className = "text-and-button";
+        info.innerHTML = `
+          <div class="text">
+            <strong class="song-title">${album.name}</strong>
+            <em class="song-author">${album.artists[0]?.name}</em>
+          </div>
+        `;
+  
+        card.appendChild(imgWrapper);
+        card.appendChild(info);
+        albumGrid.appendChild(card);
+      });
+    }
+  
+    fetchNewReleases();
+  </script>
+</body>
+</html>
