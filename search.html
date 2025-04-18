@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" >
+  <title>Search | SpotifyClone</title>
+  <link rel="stylesheet" href="styles.css" >
+</head>
+<body>
+  <div class="navbar">
+    <div class="title">
+      <a href="frontpage.html">
+        <img src="not-spotify-high-resolution-logo.png" alt="Logo" class="logo" />
+      </a>
+    </div>
+    <div class="nav-buttons">
+      <a href="search.html">Search</a>
+      <a href="playlists.html">Playlists</a>
+      <a href="trending.html">Trending</a>
+    </div>
+  </div>
+
+  <main class="search-container">
+    <h2>Search for a Track</h2>
+    <input type="text" id="track-input" placeholder="Track name..." />
+    <input type="text" id="artist-input" placeholder="Artist name..." />
+    <button id="search-button">Search</button>
+
+    <div id="search-results" class="results-grid"></div>
+  </main>
+
+  <script>
+    const clientId = "ca62db222e4f417aaf50b4e1824adeef";
+    const clientSecret = "824802c132fe4dd4a5aa6c7be8f2b7f0";
+    const encodedCredentials = btoa(`${clientId}:${clientSecret}`);
+
+    async function getAccessToken() {
+      const response = await fetch("https://accounts.spotify.com/api/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/x-www-form-urlencoded",
+          "Authorization": `Basic ${encodedCredentials}`
+        },
+        body: "grant_type=client_credentials"
+      });
+
+      const data = await response.json();
+      return data.access_token;
+    }
+
+    async function searchTrackArtist(track, artist) {
+      const token = await getAccessToken();
+      const query = `track:${track} artist:${artist}`;
+      const url = `https://api.spotify.com/v1/search?q=${encodeURIComponent(query)}&type=track&limit=10`;
+
+      const response = await fetch(url, {
+        headers: {
+          "Authorization": `Bearer ${token}`
+        }
+      });
+
+      const data = await response.json();
+      displayResults(data.tracks.items);
+    }
+
+    function formatDuration(ms) {
+      const minutes = Math.floor(ms / 60000);
+      const seconds = ((ms % 60000) / 1000).toFixed(0);
+      return `${minutes}:${(seconds < 10 ? '0' : '')}${seconds}`;
+    }
+
+    function displayResults(tracks) {
+      const container = document.getElementById("search-results");
+      container.innerHTML = "";
+
+      if (tracks.length === 0) {
+        container.innerHTML = "<p>No results found.</p>";
+        return;
+      }
+
+      tracks.forEach(track => {
+        const card = document.createElement("div");
+        card.className = "song-box";
+
+        const image = track.album.images[0]?.url || "";
+        const artists = track.artists.map(a => a.name).join(", ");
+
+        const duration = formatDuration(track.duration_ms);
+        const popularity = track.popularity;
+        const explicit = track.explicit ? "Yes" : "No";
+
+        card.innerHTML = `
+          <img src="${image}" alt="${track.name}" class="song-image" />
+          <div class="text">
+            <strong class="song-title">${track.name}</strong><br/>
+            <em class="song-author">${artists}</em><br/>
+            <p>Album: ${track.album.name}</p>
+            <p>Duration: ${duration}</p>
+            <p>Popularity: ${popularity}</p>
+            <p>Explicit: ${explicit}</p>
+          </div>
+        `;
+
+        container.appendChild(card);
+      });
+    }
+
+    document.getElementById("search-button").addEventListener("click", () => {
+      const track = document.getElementById("track-input").value.trim();
+      const artist = document.getElementById("artist-input").value.trim();
+      if (track && artist) {
+        searchTrackArtist(track, artist);
+      } else {
+        alert("Please enter both track and artist name.");
+      }
+    });
+  </script>
+</body>
+</html>
